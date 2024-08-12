@@ -152,33 +152,6 @@ jobs:
               docker push pennbbl/qsiprep_build:$CIRCLE_TAG
             fi
 
-  build_nofsl:
-    environment:
-      TZ: "/usr/share/zoneinfo/America/New_York"
-    docker:
-      - image: cimg/base:2020.09
-    working_directory: /tmp/src/qsiprep_build
-    steps:
-      - checkout
-      - setup_remote_docker:
-         version: docker24
-
-      - run:
-          name: Build without FSL and push
-          no_output_timeout: 5h
-          command: |
-            if [[ -n "$CIRCLE_TAG" ]]; then
-              source setup_build.sh
-              do_build no_fsl
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker push pennbbl/qsiprep_build:${CIRCLE_TAG}-nofsl
-            fi
-
-  deployable:
-    docker:
-      - image: busybox:latest
-    steps:
-      - run: echo Deploying!
 
 workflows:
   version: 2
@@ -234,36 +207,6 @@ workflows:
       - build_TORTOISECUDA:
           requires:
             - build_ANTs
-          filters:
-            tags:
-              only: /.*/
-
-      - deployable:
-          requires:
-            - build_FSL
-            - build_FreeSurfer
-            - build_3Tissue
-            - build_MRtrix3
-            - build_DSIStudio
-            - build_ANTs
-            - build_Micromamba
-            - build_AFNI
-            - build_TORTOISE
-            - build_TORTOISECUDA
-          filters:
-            tags:
-              only: /.*/
-
-      - build:
-          requires:
-            - deployable
-          filters:
-            tags:
-              only: /.*/
-
-      - build_nofsl:
-          requires:
-            - deployable
           filters:
             tags:
               only: /.*/
